@@ -9,7 +9,7 @@ import { ChartGantt, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>("demo-poetry-garden");
   
   const { data: analyses, isLoading } = useQuery({
     queryKey: ["/api/analyses"],
@@ -28,7 +28,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">CourtialAPI</h1>
-                <p className="text-xs text-muted-foreground">Text Analysis & Lexical Networks</p>
+                <p className="text-xs text-muted-foreground">Jardin Poétique & Cosmogonie des Mots</p>
               </div>
             </div>
             
@@ -38,7 +38,7 @@ export default function Dashboard() {
               <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">API</a>
               <Button className="font-medium" data-testid="button-new-analysis">
                 <Plus className="mr-2" size={16} />
-                New Analysis
+                Cultiver un Nouveau Jardin
               </Button>
             </nav>
           </div>
@@ -87,7 +87,7 @@ export default function Dashboard() {
                 <span className="font-semibold">CourtialAPI</span>
               </div>
               <p className="text-muted-foreground text-sm">
-                Advanced text analysis and lexical network generation for research and data analysis.
+                Cultivez votre jardin poétique numérique où chaque mot devient graine de sens et chaque connexion tisse la toile de votre cosmogonie personnelle.
               </p>
             </div>
             

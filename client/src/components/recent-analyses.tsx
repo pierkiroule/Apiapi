@@ -84,7 +84,7 @@ export default function RecentAnalyses({
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-foreground">Recent Analyses</h2>
+          <h2 className="text-xl font-semibold text-foreground">Jardins Récents</h2>
           <Button 
             variant="ghost" 
             size="sm"
@@ -98,7 +98,7 @@ export default function RecentAnalyses({
         {analyses.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FileText size={48} className="mx-auto mb-4 text-muted-foreground" />
-            <p>No analyses yet. Start by uploading a text file above.</p>
+            <p>Aucun jardin encore planté. Commencez en semant vos premiers mots ci-dessus.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

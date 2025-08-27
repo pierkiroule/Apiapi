@@ -302,9 +302,9 @@ export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Detected Communities</h3>
                 
-                {analysis.status === "completed" && analysis.communities ? (
+                {analysis.status === "completed" && analysis.communityData ? (
                   <div className="grid gap-4">
-                    {analysis.communities.map((community, index) => (
+                    {analysis.communityData.map((community, index) => (
                       <Card key={community.id} className="p-4" data-testid={`community-${index}`}>
                         <div className="flex items-center space-x-3 mb-3">
                           <div 

@@ -21,7 +21,7 @@ export const analyses = pgTable("analyses", {
   communities: integer("communities").notNull().default(0),
   wordFrequencies: jsonb("word_frequencies").notNull().$type<Array<{word: string, frequency: number, relative: number, connections: number}>>(),
   networkData: jsonb("network_data").$type<{nodes: Array<{id: string, label: string, size: number, color: string, x?: number, y?: number}>, edges: Array<{id: string, source: string, target: string, weight: number}>}>(),
-  communities: jsonb("communities_data").$type<Array<{id: number, nodes: string[], color: string}>>(),
+  communityData: jsonb("communities_data").$type<Array<{id: number, nodes: string[], color: string}>>(),
   options: jsonb("options").notNull().$type<{
     removeStopwords: boolean,
     lemmatization: boolean,

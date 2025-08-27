@@ -135,7 +135,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
   return (
     <Card>
       <CardContent className="p-6">
-        <h2 className="text-2xl font-semibold mb-4 text-foreground">Upload Text for Analysis</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-foreground">Plantez les Graines de vos Mots</h2>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -154,8 +154,8 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                   data-testid="file-drop-zone"
                 >
                   <CloudUpload className="mx-auto mb-4 text-muted-foreground" size={48} />
-                  <h3 className="text-lg font-medium mb-2">Drop your files here</h3>
-                  <p className="text-muted-foreground mb-4">Supports TXT files</p>
+                  <h3 className="text-lg font-medium mb-2">Déposez vos textes poétiques ici</h3>
+                  <p className="text-muted-foreground mb-4">Tous formats texte acceptés</p>
                   <Input
                     type="file"
                     accept=".txt"
@@ -169,7 +169,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                     onClick={() => document.getElementById("file-input")?.click()}
                     data-testid="button-choose-files"
                   >
-                    Choose Files
+                    Choisir des Textes
                   </Button>
                 </div>
                 
@@ -183,10 +183,10 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                     name="fileName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>File Name</FormLabel>
+                        <FormLabel>Nom de votre Jardin</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Enter file name..."
+                            placeholder="Donnez un nom à votre création..."
                             {...field}
                             data-testid="input-filename"
                           />
@@ -203,7 +203,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                         <FormControl>
                           <Textarea 
                             className="min-h-32 resize-none"
-                            placeholder="Paste your text directly here..."
+                            placeholder="Écrivez ou collez votre texte poétique ici, laissez germer vos mots..."
                             {...field}
                             data-testid="input-text"
                           />
@@ -216,7 +216,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
               
               {/* Analysis Options */}
               <div className="space-y-4">
-                <h3 className="font-medium text-foreground">Analysis Options</h3>
+                <h3 className="font-medium text-foreground">Options de Cultivation</h3>
                 
                 <div className="space-y-3">
                   <FormField
@@ -232,7 +232,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <Label>Remove stopwords</Label>
+                          <Label>Éliminer les mots vides</Label>
                         </div>
                       </FormItem>
                     )}
@@ -251,7 +251,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <Label>Lemmatization</Label>
+                          <Label>Racines des mots</Label>
                         </div>
                       </FormItem>
                     )}
@@ -270,7 +270,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <Label>Remove accents</Label>
+                          <Label>Simplifier les accents</Label>
                         </div>
                       </FormItem>
                     )}
@@ -289,7 +289,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <Label>Community detection</Label>
+                          <Label>Détecter les familles de mots</Label>
                         </div>
                       </FormItem>
                     )}
@@ -302,7 +302,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                     name="minFrequency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Min frequency</FormLabel>
+                        <FormLabel>Fréquence minimum</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -320,7 +320,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                     name="maxWords"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Max words</FormLabel>
+                        <FormLabel>Mots maximum</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -340,7 +340,7 @@ export default function FileUpload({ onAnalysisComplete }: FileUploadProps) {
                   disabled={createAnalysisMutation.isPending}
                   data-testid="button-start-analysis"
                 >
-                  {createAnalysisMutation.isPending ? "Starting..." : "Start Analysis"}
+                  {createAnalysisMutation.isPending ? "Plantation en cours..." : "Faire Germer l'Analyse"}
                 </Button>
               </div>
             </div>
