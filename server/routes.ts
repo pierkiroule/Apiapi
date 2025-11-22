@@ -184,7 +184,13 @@ function detectCommunities(networkData: { nodes: NetworkNode[]; edges: NetworkEd
   }));
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export function attachRoutes(app: Express) {
+  if (app.get("routesAttached")) {
+    return;
+  }
+
+  app.set("routesAttached", true);
+
   // Health check
   app.get("/api/health", async (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -397,6 +403,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   }
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  attachRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
