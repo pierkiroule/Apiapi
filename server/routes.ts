@@ -184,6 +184,8 @@ function detectCommunities(networkData: { nodes: NetworkNode[]; edges: NetworkEd
   }));
 }
 
+const INLINE_PROCESSING = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+
 export function attachRoutes(app: Express) {
   if (app.get("routesAttached")) {
     return;
@@ -201,14 +203,20 @@ export function attachRoutes(app: Express) {
     try {
       const validatedData = insertAnalysisSchema.parse(req.body);
       const analysis = await storage.createAnalysis(validatedData);
-      
-      // Start processing in background (simplified)
+
+      if (INLINE_PROCESSING) {
+        await processAnalysis(analysis.id);
+        const processed = await storage.getAnalysis(analysis.id);
+        return res.status(201).json(processed ?? analysis);
+      }
+
+      // Start processing in background (simplified) for long-lived servers
       processAnalysis(analysis.id).catch(console.error);
-      
+
       res.status(201).json(analysis);
     } catch (error) {
       console.error("Create analysis error:", error);
-      res.status(400).json({ 
+      res.status(400).json({
         message: error instanceof z.ZodError ? "Invalid request data" : "Failed to create analysis",
         errors: error instanceof z.ZodError ? error.errors : undefined
       });
