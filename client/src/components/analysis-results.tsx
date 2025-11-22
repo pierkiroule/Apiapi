@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Analysis } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,12 +16,13 @@ interface AnalysisResultsProps {
 export default function AnalysisResults({ analysisId }: AnalysisResultsProps) {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: analysis, isLoading, error } = useQuery({
+  const { data: analysis, isLoading, error } = useQuery<Analysis>({
     queryKey: ["/api/analyses", analysisId],
     queryFn: () => getAnalysis(analysisId),
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
       // Refetch while analysis is still processing
-      if (data?.status === "processing" || data?.status === "pending") {
+      if (status === "processing" || status === "pending") {
         return 2000; // Poll every 2 seconds
       }
       return false; // Stop polling when completed
