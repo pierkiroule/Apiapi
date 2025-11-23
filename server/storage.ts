@@ -205,6 +205,7 @@ Dans ce laboratoire du sentiment`;
       totalWords: 0,
       uniqueWords: 0,
       networkNodes: 0,
+      communities: 0,
       wordFrequencies: [],
       networkData: null,
       communityData: null,

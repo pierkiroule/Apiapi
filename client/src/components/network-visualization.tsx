@@ -51,14 +51,14 @@ export default function NetworkVisualization({ networkData }: NetworkVisualizati
       }));
 
       // Draw edges
-      ctx.strokeStyle = "hsl(210, 40%, 80%)";
-      ctx.lineWidth = 1;
-      
       networkData.edges.forEach(edge => {
         const sourceNode = nodes.find(n => n.id === edge.source);
         const targetNode = nodes.find(n => n.id === edge.target);
-        
+
         if (sourceNode && targetNode) {
+          const width = Math.max(0.5, edge.weight * 3);
+          ctx.strokeStyle = `hsla(210, 40%, 50%, ${Math.min(0.9, 0.3 + edge.weight)})`;
+          ctx.lineWidth = width;
           ctx.beginPath();
           ctx.moveTo(sourceNode.x!, sourceNode.y!);
           ctx.lineTo(targetNode.x!, targetNode.y!);

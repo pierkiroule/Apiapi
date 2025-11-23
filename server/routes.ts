@@ -30,77 +30,169 @@ function tokenizeText(text: string, options: any) {
   return tokens;
 }
 
-function calculateWordFrequencies(tokens: string[], maxWords: number) {
+type WordFrequency = {
+  word: string;
+  frequency: number;
+  relative: number;
+  connections: number;
+};
+
+type NetworkNode = {
+  id: string;
+  label: string;
+  size: number;
+  color: string;
+  x?: number;
+  y?: number;
+};
+
+type NetworkEdge = {
+  id: string;
+  source: string;
+  target: string;
+  weight: number;
+};
+
+function calculateWordFrequencies(tokens: string[], maxWords: number, minFrequency: number): WordFrequency[] {
   const frequencyMap = new Map<string, number>();
-  
+
   tokens.forEach(token => {
     frequencyMap.set(token, (frequencyMap.get(token) || 0) + 1);
   });
-  
+
   const totalTokens = tokens.length;
   const sortedWords = Array.from(frequencyMap.entries())
+    .filter(([, frequency]) => frequency >= minFrequency)
     .sort((a, b) => b[1] - a[1])
     .slice(0, maxWords);
-  
+
   return sortedWords.map(([word, frequency]) => ({
     word,
     frequency,
     relative: (frequency / totalTokens) * 100,
-    connections: Math.floor(Math.random() * 25) + 1 // Simplified for now
+    connections: 0
   }));
 }
 
-function generateNetworkData(wordFreqs: any[], options: any) {
-  const nodes = wordFreqs.slice(0, Math.min(50, wordFreqs.length)).map((wordData, index) => ({
-    id: wordData.word,
-    label: wordData.word,
-    size: Math.log(wordData.frequency + 1) * 3,
-    color: `hsl(${(index * 137.5) % 360}, 70%, 60%)`,
-    x: Math.random() * 800,
-    y: Math.random() * 600
-  }));
-  
-  const edges: any[] = [];
-  
-  // Generate edges based on co-occurrence (simplified)
-  for (let i = 0; i < nodes.length - 1; i++) {
-    for (let j = i + 1; j < Math.min(i + 5, nodes.length); j++) {
-      if (Math.random() > 0.7) {
-        edges.push({
-          id: `${nodes[i].id}-${nodes[j].id}`,
-          source: nodes[i].id,
-          target: nodes[j].id,
-          weight: Math.random() * 0.8 + 0.2
-        });
-      }
+function buildCoOccurrences(tokens: string[], allowedWords: Set<string>, windowSize = 4) {
+  const coOccurrenceCounts = new Map<string, number>();
+
+  for (let i = 0; i < tokens.length; i++) {
+    if (!allowedWords.has(tokens[i])) continue;
+
+    for (let j = i + 1; j <= i + windowSize && j < tokens.length; j++) {
+      if (!allowedWords.has(tokens[j]) || tokens[i] === tokens[j]) continue;
+
+      const [source, target] = [tokens[i], tokens[j]].sort();
+      const key = `${source}|${target}`;
+      coOccurrenceCounts.set(key, (coOccurrenceCounts.get(key) || 0) + 1);
     }
   }
-  
-  return { nodes, edges };
+
+  return coOccurrenceCounts;
 }
 
-function detectCommunities(networkData: any) {
-  // Simplified community detection
-  const communities = [];
-  const nodes = networkData.nodes;
-  const communitySize = Math.ceil(nodes.length / 4);
-  
-  for (let i = 0; i < 4; i++) {
-    const startIdx = i * communitySize;
-    const endIdx = Math.min((i + 1) * communitySize, nodes.length);
-    const communityNodes = nodes.slice(startIdx, endIdx).map((node: any) => node.id);
-    
-    communities.push({
-      id: i,
-      nodes: communityNodes,
-      color: `hsl(${(i * 90) % 360}, 60%, 70%)`
+function generateNetworkData(wordFreqs: WordFrequency[], coOccurrences: Map<string, number>, frequencyMap: Map<string, number>) {
+  const nodes: NetworkNode[] = wordFreqs.map((wordData, index) => ({
+    id: wordData.word,
+    label: wordData.word,
+    size: Math.max(6, Math.log(wordData.frequency + 1) * 4),
+    color: `hsl(${(index * 137.5) % 360}, 70%, 60%)`,
+    x: Math.cos((index / wordFreqs.length) * 2 * Math.PI) * 200 + 400,
+    y: Math.sin((index / wordFreqs.length) * 2 * Math.PI) * 200 + 300
+  }));
+
+  const edges: NetworkEdge[] = [];
+
+  coOccurrences.forEach((count, key) => {
+    const [source, target] = key.split("|");
+    const freqSource = frequencyMap.get(source) || 1;
+    const freqTarget = frequencyMap.get(target) || 1;
+
+    // Callon & Courtial association strength (cij / sqrt(ci * cj))
+    const associationStrength = count / Math.sqrt(freqSource * freqTarget);
+
+    edges.push({
+      id: `${source}-${target}`,
+      source,
+      target,
+      weight: Number(associationStrength.toFixed(3))
+    });
+  });
+
+  // Keep strongest edges to avoid overplotting
+  const limitedEdges = edges
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 200)
+    .filter(edge => edge.weight > 0);
+
+  return { nodes, edges: limitedEdges };
+}
+
+function detectCommunities(networkData: { nodes: NetworkNode[]; edges: NetworkEdge[] }) {
+  const labels = new Map<string, string>();
+  const adjacency = new Map<string, Map<string, number>>();
+
+  networkData.nodes.forEach(node => {
+    labels.set(node.id, node.id);
+    adjacency.set(node.id, new Map());
+  });
+
+  networkData.edges.forEach(edge => {
+    adjacency.get(edge.source)?.set(edge.target, edge.weight);
+    adjacency.get(edge.target)?.set(edge.source, edge.weight);
+  });
+
+  const iterations = 8;
+  for (let iter = 0; iter < iterations; iter++) {
+    networkData.nodes.forEach(node => {
+      const neighbors = adjacency.get(node.id);
+      if (!neighbors || neighbors.size === 0) return;
+
+      const labelWeights = new Map<string, number>();
+      neighbors.forEach((weight, neighbor) => {
+        const neighborLabel = labels.get(neighbor) || neighbor;
+        labelWeights.set(neighborLabel, (labelWeights.get(neighborLabel) || 0) + weight);
+      });
+
+      let bestLabel = labels.get(node.id) || node.id;
+      let bestScore = -Infinity;
+
+      labelWeights.forEach((weight, label) => {
+        if (weight > bestScore) {
+          bestScore = weight;
+          bestLabel = label;
+        }
+      });
+
+      labels.set(node.id, bestLabel);
     });
   }
-  
-  return communities;
+
+  const communitiesMap = new Map<string, string[]>();
+  labels.forEach((label, nodeId) => {
+    const group = communitiesMap.get(label) || [];
+    group.push(nodeId);
+    communitiesMap.set(label, group);
+  });
+
+  let index = 0;
+  return Array.from(communitiesMap.entries()).map(([label, nodes]) => ({
+    id: index++,
+    nodes,
+    color: `hsl(${(index * 72) % 360}, 60%, 70%)`
+  }));
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+const INLINE_PROCESSING = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+
+export function attachRoutes(app: Express) {
+  if (app.get("routesAttached")) {
+    return;
+  }
+
+  app.set("routesAttached", true);
+
   // Health check
   app.get("/api/health", async (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -111,14 +203,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertAnalysisSchema.parse(req.body);
       const analysis = await storage.createAnalysis(validatedData);
-      
-      // Start processing in background (simplified)
+
+      if (INLINE_PROCESSING) {
+        await processAnalysis(analysis.id);
+        const processed = await storage.getAnalysis(analysis.id);
+        return res.status(201).json(processed ?? analysis);
+      }
+
+      // Start processing in background (simplified) for long-lived servers
       processAnalysis(analysis.id).catch(console.error);
-      
+
       res.status(201).json(analysis);
     } catch (error) {
       console.error("Create analysis error:", error);
-      res.status(400).json({ 
+      res.status(400).json({
         message: error instanceof z.ZodError ? "Invalid request data" : "Failed to create analysis",
         errors: error instanceof z.ZodError ? error.errors : undefined
       });
@@ -259,29 +357,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokens = tokenizeText(analysis.originalText, analysis.options);
       const processedText = tokens.join(' ');
       
-      // Calculate word frequencies
-      const wordFrequencies = calculateWordFrequencies(tokens, analysis.options.maxWords)
-        .filter(word => word.frequency >= analysis.options.minFrequency);
-      
-      // Generate network data
-      const networkData = generateNetworkData(wordFrequencies, analysis.options);
-      
+      // Calculate word frequencies and keep only words that meet frequency constraints
+      const wordFrequencies = calculateWordFrequencies(
+        tokens,
+        analysis.options.maxWords,
+        analysis.options.minFrequency
+      );
+
+      // Build co-occurrence matrix with a sliding window to capture associations
+      const frequencyMap = new Map(wordFrequencies.map(word => [word.word, word.frequency]));
+      const allowedWords = new Set(wordFrequencies.map(word => word.word));
+      const coOccurrences = buildCoOccurrences(tokens, allowedWords, 5);
+
+      // Generate network graph using Callon & Courtial association strength
+      const networkData = generateNetworkData(wordFrequencies, coOccurrences, frequencyMap);
+
+      // Update connection counts using the constructed network
+      const adjacency = new Map<string, Set<string>>();
+      networkData.edges.forEach(edge => {
+        if (!adjacency.has(edge.source)) adjacency.set(edge.source, new Set());
+        if (!adjacency.has(edge.target)) adjacency.set(edge.target, new Set());
+        adjacency.get(edge.source)?.add(edge.target);
+        adjacency.get(edge.target)?.add(edge.source);
+      });
+
+      wordFrequencies.forEach(word => {
+        word.connections = adjacency.get(word.word)?.size || 0;
+      });
+
       // Detect communities if enabled
-      let communities = null;
-      if (analysis.options.communityDetection) {
-        communities = detectCommunities(networkData);
+      let communityData = null;
+      if (analysis.options.communityDetection && networkData.edges.length > 0) {
+        communityData = detectCommunities(networkData);
       }
-      
+
       // Update analysis with results
       await storage.updateAnalysis(analysisId, {
         processedText,
         totalWords: tokens.length,
         uniqueWords: new Set(tokens).size,
         networkNodes: networkData.nodes.length,
-        communities: communities ? communities.length : 0,
+        communities: communityData ? communityData.length : 0,
         wordFrequencies,
         networkData,
-        communities,
+        communityData,
         status: "completed"
       });
       
@@ -292,6 +411,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   }
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  attachRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
